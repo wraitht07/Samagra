@@ -1,0 +1,109 @@
+[
+  {
+    "id": "ac_001",
+    "title": "Tender demands ISI mark for IS 456 concrete",
+    "severity": "critical",
+    "description": "BOQ clause: 'All concrete shall be ISI marked as per IS 456:2000'. IS 456 is a code of practice; no product licence exists.",
+    "correct_action": "Remove ISI-mark requirement; specify materials (cement, steel, aggregates) that do carry Scheme-I licences and require mix design + cube tests per IS 456.",
+    "related_standards": [
+      "IS 456:2000",
+      "IS 269:2015",
+      "IS 1786:2008",
+      "IS 383:2016"
+    ]
+  },
+  {
+    "id": "ac_002",
+    "title": "Fe500 ordered in seismic zone III instead of Fe500D",
+    "severity": "high",
+    "description": "Structural drawings specify Fe500; site is seismic zone III. IS 13920 requires enhanced ductility (Fe500D or higher).",
+    "correct_action": "Amend to Fe500D / Fe500S as applicable; verify mill certificates show elongation \u226516%.",
+    "related_standards": [
+      "IS 1786:2008"
+    ]
+  },
+  {
+    "id": "ac_003",
+    "title": "IT tender asks for ISI mark on laptops under IS 13252",
+    "severity": "high",
+    "description": "Tender requires 'ISI Mark CM/L number as per IS 13252 Part 1'. Product is under CRS; correct marking is R-number.",
+    "correct_action": "Change to 'BIS CRS Registration (R-number) under IS 13252 (Part 1):2010'.",
+    "related_standards": [
+      "IS 13252 (Part 1):2010"
+    ]
+  },
+  {
+    "id": "ac_004",
+    "title": "Power-bank tender cites IS 16046 Part 1 for lithium cells",
+    "severity": "high",
+    "description": "Specification lists IS 16046 (Part 1). Lithium systems are Part 2.",
+    "correct_action": "Correct to IS 16046 (Part 2):2018; require separate R-number for lithium chemistry.",
+    "related_standards": [
+      "IS 16046 (Part 1):2018",
+      "IS 16046 (Part 2):2018"
+    ]
+  },
+  {
+    "id": "ac_005",
+    "title": "Helmet BOQ missing amendments to IS 4151:2015",
+    "severity": "medium",
+    "description": "Tender cites IS 4151:2015 without Amendment 1 (2018) or Amendment 2 (2020).",
+    "correct_action": "Specify 'IS 4151:2015 with all amendments' and require current licence scope covering the amendments.",
+    "related_standards": [
+      "IS 4151:2015"
+    ]
+  },
+  {
+    "id": "ac_006",
+    "title": "Gold jewellery tender demands Scheme-I ISI licence",
+    "severity": "high",
+    "description": "Tender requires manufacturer to hold Scheme-I licence under IS 1417. Hallmarking is a different scheme.",
+    "correct_action": "Require BIS-registered jeweller + hallmarking through recognised Assaying & Hallmarking Centre per IS 1417 / IS 15820.",
+    "related_standards": [
+      "IS 1417:2016",
+      "IS 15820:2009"
+    ]
+  },
+  {
+    "id": "ac_007",
+    "title": "Appliance QCO cites outdated IS 302 (Part 1):2008 after transition",
+    "severity": "medium",
+    "description": "New contract after concurrent-running end date still references 2008 edition.",
+    "correct_action": "Update to IS 302 (Part 1):2024 / IEC 60335-1:2020 and verify MSME category deadlines.",
+    "related_standards": [
+      "IS 302 (Part 1):2008",
+      "IS 302 (Part 1):2024"
+    ]
+  },
+  {
+    "id": "ac_008",
+    "title": "Structural steel specified as 'IS 2062 Fe410' without quality class",
+    "severity": "medium",
+    "description": "Old Fe-nomenclature used; no impact-test class (A/BR/B0/C) stated.",
+    "correct_action": "Map Fe410 \u2192 E250 and add required quality class (e.g. E250 BR). Confirm current edition year.",
+    "related_standards": [
+      "IS 2062:2011"
+    ]
+  },
+  {
+    "id": "ac_009",
+    "title": "Fire extinguisher tender mixes IS 2190 and IS 15683",
+    "severity": "medium",
+    "description": "Product compliance clause cites IS 2190 (code of practice) instead of IS 15683 (product standard).",
+    "correct_action": "Product shall conform to IS 15683:2018; installation/maintenance per IS 2190:2010.",
+    "related_standards": [
+      "IS 2190:2010",
+      "IS 15683:2018"
+    ]
+  },
+  {
+    "id": "ac_010",
+    "title": "Drinking-water tank tender requires ISI mark under IS 10500",
+    "severity": "medium",
+    "description": "Tender treats IS 10500 as a product standard requiring ISI mark on the water or tank.",
+    "correct_action": "IS 10500 is a water-quality specification. Specify tank material standard separately and require water test reports against IS 10500 limits.",
+    "related_standards": [
+      "IS 10500:2012"
+    ]
+  }
+]

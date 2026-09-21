@@ -1,0 +1,87 @@
+[
+  {
+    "id": "helmet_qco_2020",
+    "title": "Helmet for riders of Two Wheeler Motor Vehicles (Quality Control) Order, 2020",
+    "ministry": "Ministry of Road Transport and Highways / DPIIT",
+    "effective_from": "2021-06-01",
+    "standards": [
+      "IS 4151:2015"
+    ],
+    "scheme": "Scheme-I (ISI Mark)",
+    "notes": "Mandatory ISI Mark + CM/L number. Amendments to IS 4151 must be considered."
+  },
+  {
+    "id": "steel_qco",
+    "title": "Steel and Steel Products (Quality Control) Order",
+    "ministry": "Ministry of Steel",
+    "effective_from": "various (2020 onwards, updated 2024)",
+    "standards": [
+      "IS 1786:2008",
+      "IS 2062:2011"
+    ],
+    "scheme": "Scheme-I (ISI Mark)",
+    "notes": "Covers TMT bars and structural steel. Grade and edition must match current QCO schedule."
+  },
+  {
+    "id": "electronics_cro",
+    "title": "Electronics and Information Technology Goods (Requirement of Compulsory Registration) Order",
+    "ministry": "MeitY",
+    "effective_from": "2012 onwards (expanded list)",
+    "standards": [
+      "IS 13252 (Part 1):2010",
+      "IS 16046 (Part 1):2018",
+      "IS 16046 (Part 2):2018"
+    ],
+    "scheme": "CRS (R-number)",
+    "notes": "NOT Scheme-I. Marking is BIS Standard Mark + R-number. No factory audit for most products."
+  },
+  {
+    "id": "electrical_appliances_qco_2026",
+    "title": "Safety of Household, Commercial and Similar Electrical Appliances (Quality Control) Order, 2026",
+    "ministry": "DPIIT",
+    "effective_from": "2026-10-01 (general); staggered for MSME",
+    "standards": [
+      "IS 302 (Part 1):2024"
+    ],
+    "scheme": "Scheme-I (ISI Mark)",
+    "notes": "Supersedes earlier QCOs. Concurrent running of 2008 edition until transition ends."
+  },
+  {
+    "id": "hallmarking_order",
+    "title": "Hallmarking of Gold Jewellery and Gold Artefacts Order",
+    "ministry": "DPIIT / BIS",
+    "effective_from": "2021-06-23 (phased)",
+    "standards": [
+      "IS 1417:2016",
+      "IS 15820:2009"
+    ],
+    "scheme": "Hallmarking (distinct from Scheme-I)",
+    "notes": "Hallmark applied by BIS-recognised Assaying & Hallmarking Centres. Not a factory licence under Scheme-I."
+  },
+  {
+    "id": "cookware_qco",
+    "title": "Cookware, Utensils and Cans for Foods and Beverages (Quality Control) Order",
+    "ministry": "DPIIT",
+    "effective_from": "2025-10-01 (general); MSME staggered to 2026",
+    "standards": [
+      "IS 14756:2024"
+    ],
+    "scheme": "Scheme-I (ISI Mark)",
+    "notes": "Standard year (2024) vs QCO implementation dates frequently mismatched in tenders."
+  },
+  {
+    "id": "cement_qco_2003",
+    "title": "Cement (Quality Control) Order, 2003",
+    "ministry": "DPIIT",
+    "effective_from": "2003",
+    "standards": [
+      "IS 269:2015",
+      "IS 8112:2013",
+      "IS 12269:1987",
+      "IS 1489",
+      "IS 455"
+    ],
+    "scheme": "Scheme-I (ISI Mark)",
+    "notes": "Long-standing mandatory certification for ordinary Portland and blended cements."
+  }
+]

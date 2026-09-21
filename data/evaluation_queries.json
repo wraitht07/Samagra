@@ -1,0 +1,105 @@
+[
+  {
+    "id": "eq_001",
+    "query": "Is ISI mark mandatory for concrete as per IS 456?",
+    "expected_answer": "No. IS 456 is a code of practice, not a product standard. No Scheme-I licence exists for 'concrete'.",
+    "related_standards": [
+      "IS 456:2000"
+    ],
+    "difficulty": "hard",
+    "trap": "code_vs_product"
+  },
+  {
+    "id": "eq_002",
+    "query": "Difference between Fe500 and Fe500D under IS 1786:2008",
+    "expected_answer": "Both have min YS 500 MPa. Fe500D requires higher elongation (\u226516%) and higher TS/YS ratio; mandatory for seismic ductile detailing.",
+    "related_standards": [
+      "IS 1786:2008"
+    ],
+    "difficulty": "medium",
+    "trap": "grade_confusion"
+  },
+  {
+    "id": "eq_003",
+    "query": "Does IS 13252 Part 1 require ISI Mark or CRS R-number?",
+    "expected_answer": "CRS R-number. It is under Compulsory Registration Scheme, not Scheme-I.",
+    "related_standards": [
+      "IS 13252 (Part 1):2010"
+    ],
+    "difficulty": "hard",
+    "trap": "crs_vs_isi"
+  },
+  {
+    "id": "eq_004",
+    "query": "Which standard for lithium-ion power bank cells?",
+    "expected_answer": "IS 16046 (Part 2):2018 under CRS. Part 1 is for nickel systems only.",
+    "related_standards": [
+      "IS 16046 (Part 2):2018",
+      "IS 16046 (Part 1):2018"
+    ],
+    "difficulty": "medium",
+    "trap": "part_mixup"
+  },
+  {
+    "id": "eq_005",
+    "query": "Is hallmarking the same as ISI mark for gold jewellery?",
+    "expected_answer": "No. Hallmarking under IS 1417 is a distinct scheme operated through Assaying & Hallmarking Centres; it is not Scheme-I factory licence.",
+    "related_standards": [
+      "IS 1417:2016"
+    ],
+    "difficulty": "hard",
+    "trap": "hallmarking_vs_isi"
+  },
+  {
+    "id": "eq_006",
+    "query": "Can I still use IS 302 (Part 1):2008 for new appliance registrations?",
+    "expected_answer": "Transition period exists under successive QCOs; new registrations should target IS 302 (Part 1):2024. Check current concurrent-running end date.",
+    "related_standards": [
+      "IS 302 (Part 1):2008",
+      "IS 302 (Part 1):2024"
+    ],
+    "difficulty": "hard",
+    "trap": "edition_change"
+  },
+  {
+    "id": "eq_007",
+    "query": "IS 2190 or IS 15683 for portable fire extinguisher product compliance?",
+    "expected_answer": "IS 15683:2018 is the product specification. IS 2190:2010 is the code of practice for selection/installation/maintenance.",
+    "related_standards": [
+      "IS 2190:2010",
+      "IS 15683:2018"
+    ],
+    "difficulty": "medium",
+    "trap": "code_vs_product"
+  },
+  {
+    "id": "eq_008",
+    "query": "Is IS 10500 a product standard that requires ISI mark on drinking water?",
+    "expected_answer": "No. IS 10500 is a water quality specification. Packaged drinking water has separate standards and certification routes.",
+    "related_standards": [
+      "IS 10500:2012"
+    ],
+    "difficulty": "medium",
+    "trap": "spec_vs_product_mark"
+  },
+  {
+    "id": "eq_009",
+    "query": "What is the correct standard and scheme for two-wheeler helmets?",
+    "expected_answer": "IS 4151:2015 under Scheme-I (ISI Mark + CM/L). Mandatory since 1 June 2021. Include amendments.",
+    "related_standards": [
+      "IS 4151:2015"
+    ],
+    "difficulty": "easy",
+    "trap": "amendments_ignored"
+  },
+  {
+    "id": "eq_010",
+    "query": "Structural steel plate \u2014 IS 2062 which year and grade for seismic zone?",
+    "expected_answer": "Current edition IS 2062:2011. Specify grade (e.g. E350) AND quality class (BR or C for impact). Old Fe-nomenclature should be mapped.",
+    "related_standards": [
+      "IS 2062:2011"
+    ],
+    "difficulty": "hard",
+    "trap": "wrong_year_grade"
+  }
+]

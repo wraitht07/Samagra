@@ -1,0 +1,20 @@
+SAMPLE TENDER EXTRACT – Concrete & Aggregates (illustrative, for evaluation only)
+
+Name of Work: Construction of RCC framed structure for institutional building
+
+BOQ Clause 4.2 – Cement
+Cement shall be Ordinary Portland Cement 43 Grade conforming to IS 8112:2013 / IS 269:2015 and shall bear BIS Standard Mark (Scheme-I). Manufacturer’s test certificate and ISI licence copy to be submitted.
+
+BOQ Clause 4.3 – Reinforcement Steel  [NASTY CASE]
+High strength deformed bars conforming to IS 1786:1985 Grade Fe500. 
+(Note for evaluators: 1985 edition is superseded; Fe500 vs Fe500D not distinguished; seismic zone not considered.)
+
+BOQ Clause 4.4 – Coarse & Fine Aggregate
+Aggregates shall conform to IS 383:2016. Supplier shall provide ISI mark certificate.
+(Note: certification status of aggregates is ambiguous; many projects accept only third-party test reports.)
+
+BOQ Clause 4.5 – Concrete
+All structural concrete shall be ISI marked as per IS 456:2000.
+(Note: classic error – IS 456 is a code of practice, not a product standard.)
+
+Mix design, cube testing and acceptance criteria shall still follow IS 456:2000 and IS 516.

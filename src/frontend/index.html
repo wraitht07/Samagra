@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Samagra — Indian Standards Procurement Recommendation Engine</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="header-content">
+      <div class="brand-group">
+        <div class="emblem-badge">IS</div>
+        <div>
+          <h1 class="brand-title">Samagra</h1>
+          <p class="brand-subtitle">AI-Powered Indian Standards (BIS) Procurement Decision-Support System</p>
+        </div>
+      </div>
+      <div class="system-status-badge">
+        <span class="status-dot"></span>
+        <span>Curated BIS Corpus Active (360 Standards)</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Top Architecture & Workflow Banner -->
+    <section class="architecture-banner">
+      <div class="arch-flow">
+        <div class="arch-step"><span class="step-num">1</span> Extraction</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step"><span class="step-num">2</span> Hybrid Retrieval (BM25 + BGE-M3)</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step"><span class="step-num">3</span> RRF Reranking</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step"><span class="step-num">4</span> Statutory Verification</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step"><span class="step-num">5</span> Grounded Reasoning</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-step"><span class="step-num">6</span> Evidence Trail</div>
+      </div>
+    </section>
+
+    <!-- Main Workspace Layout -->
+    <div class="workspace-grid">
+      <!-- Left Panel: Input & Controls -->
+      <aside class="control-panel">
+        <div class="panel-header">
+          <h2>Procurement Input</h2>
+          <span class="badge-neutral">Decision Support</span>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="tab-group">
+          <button class="tab-btn active" id="tab-tender-btn" onclick="switchInputMode('tender')">Tender Document / BOQ</button>
+          <button class="tab-btn" id="tab-query-btn" onclick="switchInputMode('query')">Natural Language Query</button>
+        </div>
+
+        <!-- Preloaded Demo Cases -->
+        <div class="demo-selector-group">
+          <label class="section-label">Select Demonstration Scenario:</label>
+          <div class="demo-buttons">
+            <button class="demo-pill demo-clear" onclick="loadSampleScenario('protective_helmet')">
+              <span class="pill-badge">CASE 1</span> Clear Specification (AI NOT INVOKED)
+            </button>
+            <button class="demo-pill demo-ambiguous" onclick="loadSampleScenario('power_bank')">
+              <span class="pill-badge">CASE 2</span> Semantic Ambiguity (LOCAL LLM)
+            </button>
+            <button class="demo-pill demo-trap" onclick="loadSampleScenario('industrial_valves')">
+              <span class="pill-badge">CASE 3</span> False-Friend / Defect (HUMAN REVIEW)
+            </button>
+            <button class="demo-pill demo-concrete" onclick="loadSampleScenario('concrete_aggregate')">
+              <span class="pill-badge">AUDIT</span> Multi-Clause Civil Tender (IS 456 / Fe500)
+            </button>
+          </div>
+        </div>
+
+        <!-- Input Area -->
+        <form id="recommend-form" onsubmit="handleAnalyzeSubmit(event)">
+          <div class="form-group">
+            <label for="input-text" id="input-label" class="section-label">Tender Specification Text / Clause:</label>
+            <textarea
+              id="input-text"
+              name="text"
+              rows="8"
+              placeholder="Paste tender specifications, BOQ clauses, or natural language procurement queries here..."
+              required
+            ></textarea>
+          </div>
+
+          <!-- File Upload Option -->
+          <div class="upload-dropzone" id="dropzone">
+            <input type="file" id="file-upload" accept=".txt,.json,.doc,.docx,.pdf" onchange="handleFileSelect(event)" />
+            <div class="dropzone-content">
+              <svg class="upload-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span id="upload-label-text">Attach tender specification document (.txt, .pdf, .docx)</span>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button type="button" class="btn-secondary" onclick="clearInput()">Clear</button>
+            <button type="submit" class="btn-primary" id="analyze-btn">
+              <span class="btn-text">Audit & Verify Standards</span>
+              <div class="spinner hidden" id="loading-spinner"></div>
+            </button>
+          </div>
+        </form>
+
+        <!-- Evaluation Traps & Audit Reference Drawer -->
+        <div class="audit-drawer-container">
+          <details class="audit-details">
+            <summary class="drawer-title">Common Procurement Traps Monitored</summary>
+            <ul class="traps-list">
+              <li><strong>IS 456:2000</strong> — Demanding ISI mark on Code of Practice.</li>
+              <li><strong>IS 1786:2008 vs 1985</strong> — Superseded edition & Fe500 vs Fe500D ductility.</li>
+              <li><strong>IS 13252 vs ISI</strong> — Demanding ISI Mark instead of CRS R-number.</li>
+              <li><strong>IS 16046</strong> — Part 1 (Nickel) vs Part 2 (Lithium) chemistry mix-up.</li>
+              <li><strong>IS 4151:2015</strong> — Omission of mandatory Amendments 1 & 2.</li>
+              <li><strong>IS 1417</strong> — Confusing Hallmarking with Scheme-I Factory Mark.</li>
+            </ul>
+          </details>
+        </div>
+      </aside>
+
+      <!-- Right Panel: Evidence & Trace Workspace -->
+      <section class="results-workspace">
+        <!-- Live Recommendation Trace Banner -->
+        <div class="trace-card" id="trace-card">
+          <div class="trace-header">
+            <h3>Recommendation Pipeline Trace</h3>
+            <span class="trace-status" id="trace-status-badge">Awaiting Input</span>
+          </div>
+          <div class="trace-milestones" id="trace-milestones-container">
+            <div class="trace-item idle">1. Document / Query Extraction</div>
+            <div class="trace-item idle">2. Exact & Hybrid Retrieval (BM25 + BGE-M3)</div>
+            <div class="trace-item idle">3. Reciprocal Rank Fusion & Reranking</div>
+            <div class="trace-item idle">4. Statutory Lifecycle & Trap Verification</div>
+            <div class="trace-item idle">5. Regulatory & Mandatory QCO Check</div>
+            <div class="trace-item idle">6. Evidence Dossier Synthesis</div>
+          </div>
+        </div>
+
+        <!-- Summary Statistics Bar -->
+        <div class="summary-stats-bar hidden" id="summary-stats-bar">
+          <div class="stat-box">
+            <span class="stat-label">Clauses Evaluated</span>
+            <span class="stat-val" id="stat-total">0</span>
+          </div>
+          <div class="stat-box stat-clear">
+            <span class="stat-label">Verified (AI Not Invoked)</span>
+            <span class="stat-val" id="stat-clear">0</span>
+          </div>
+          <div class="stat-box stat-ambiguous">
+            <span class="stat-label">Disambiguated (Local LLM)</span>
+            <span class="stat-val" id="stat-ambiguous">0</span>
+          </div>
+          <div class="stat-box stat-review">
+            <span class="stat-label">Human Review / Traps Blocked</span>
+            <span class="stat-val" id="stat-review">0</span>
+          </div>
+        </div>
+
+        <!-- Results Container (Cards) -->
+        <div id="results-cards-container" class="cards-stream">
+          <!-- Empty State Placeholder -->
+          <div class="empty-state" id="empty-state">
+            <div class="empty-state-icon">🏛️</div>
+            <h3>Evidence-First Procurement Decision Support</h3>
+            <p>Select a demonstration scenario from the left panel or paste a procurement specification to generate the complete statutory audit trail.</p>
+            <div class="guarantee-box">
+              <strong>Non-Negotiable Architecture Guarantee:</strong>
+              <p>Every recommendation is backed by verbatim requirement citations, official BIS catalogue editions, statutory Quality Control Orders, and allied test/safety standards. No arbitrary scores or hallucinated standards.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="footer-content">
+      <span>SIH 26108 — AI-Powered Indian Standards Recommendation Engine</span>
+      <span>Curated Evaluation Corpus • Offline-First Architecture</span>
+    </div>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
+

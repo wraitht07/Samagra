@@ -1,0 +1,11 @@
+SAMPLE TENDER EXTRACT – Industrial Valves (illustrative / false-friend stress test)
+
+Item: Supply of industrial valves for water and high-pressure gas service lines
+
+Specification:
+Valves shall conform to “IS 1001 / IS 1002 Industrial Valve – General Requirements” and shall carry BIS ISI Mark.
+
+Evaluator Note (synthetic false-friend pair intentionally left in source data for abstention testing):
+- Real BIS corpus does not contain IS 1001 / IS 1002 as published product standards for valves in this form.
+- This clause is deliberately ambiguous to test whether a retrieval system refuses to invent a non-existent standard or confuses water-service vs gas-service requirements.
+- Correct action: reject the clause as non-existent / require the actual applicable valve standards (e.g. IS 14846, IS 9890, etc. depending on type) and applicable QCO if any.
