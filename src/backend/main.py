@@ -133,7 +133,10 @@ async def process_tender(request: Request, file: UploadFile = None):
     # Multipart / form request
     elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
         form = await request.form()
-        if "file" in form:
+        if "text" in form:
+            text_to_process = str(form.get("text", ""))
+            document_name = form.get("document_title", "Tender Specification")
+        elif "file" in form:
             uploaded = form["file"]
             if getattr(uploaded, "filename", None):
                 document_name = uploaded.filename
@@ -142,8 +145,6 @@ async def process_tender(request: Request, file: UploadFile = None):
                     text_to_process = content.decode("utf-8")
                 except UnicodeDecodeError:
                     text_to_process = content.decode("latin-1", errors="ignore")
-        if not text_to_process and "text" in form:
-            text_to_process = str(form.get("text", ""))
 
     # Fallback body parsing
     if not text_to_process:
@@ -178,9 +179,7 @@ async def process_tender(request: Request, file: UploadFile = None):
         reasoning = await reasoning_engine.resolve_ambiguity(clause, verification)
         audit_card = evidence_engine.build_audit_card(clause, verification, reasoning)
         audit_cards.append(audit_card)
-
     return evidence_engine.synthesize_document_result(extraction_result, audit_cards)
-
 if FRONTEND_DIR.exists():
     app.mount(
         "/static",

@@ -1,4 +1,6 @@
 // Samagra — Evidence-First Procurement Decision Support System
+import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@^1.17.1/dist/pdf-lib.min.js';
+import * as mammoth from 'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js';
 
 const PRELOADED_SCENARIOS = {
   protective_helmet: {
@@ -83,11 +85,54 @@ function loadSampleScenario(key) {
   document.querySelectorAll(".demo-pill").forEach(p => p.classList.remove("selected"));
 }
 
-function handleFileSelect(event) {
+async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (!file) return;
+
   selectedFile = file;
-  document.getElementById("upload-label-text").innerText = `Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  document.getElementById("upload-label-text").innerText = `Processing: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+
+  try {
+    const validTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|docx)$/i)) {
+      throw new Error("Unsupported file type. Please upload .txt, .pdf, or .docx.");
+    }
+
+    let extractedText = "";
+    if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+      extractedText = await file.text();
+    }
+    else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      extractedText = await extractTextFromPDF(file);
+    }
+    else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || file.name.endsWith('.docx')) {
+      extractedText = await extractTextFromDOCX(file);
+    }
+
+    document.getElementById("input-text").value = extractedText;
+    document.getElementById("upload-label-text").innerText = `Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+  } catch (err) {
+    alert(`Error processing file: ${err.message}`);
+    document.getElementById("upload-label-text").innerText = "Attach tender specification document (.txt, .pdf, .docx)";
+    selectedFile = null;
+  }
+}
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  let text = "";
+  for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+    const page = pdfDoc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text;
+}
+
+async function extractTextFromDOCX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
 }
 
 function clearInput() {
@@ -145,7 +190,6 @@ async function handleAnalyzeSubmit(event) {
   traceBadge.innerText = "Executing Statutory Audit Pipeline...";
   traceBadge.className = "trace-status";
 
-  // Visual trace progression
   updateTraceStep(0, "active", "1. Document & Clause Extraction ✓");
   updateTraceStep(1, "active", "2. Exact + BM25 + BGE-M3 Retrieval ✓");
   updateTraceStep(2, "active", "3. RRF Rank Fusion & Candidate Ranking ✓");
@@ -155,7 +199,8 @@ async function handleAnalyzeSubmit(event) {
     let response;
     if (selectedFile) {
       const formData = new FormData();
-      formData.append("file", selectedFile);
+      formData.append("text", document.getElementById("input-text").value);
+      formData.append("document_title", selectedFile.name);
       response = await fetch("/api/recommend", {
         method: "POST",
         body: formData,
@@ -178,7 +223,7 @@ async function handleAnalyzeSubmit(event) {
     const data = await response.json();
     updateTraceStep(4, "active", "5. Regulatory & Mandatory QCO Check ✓");
     updateTraceStep(5, "active", "6. Evidence Dossier Generated ✓");
-    
+
     traceBadge.innerText = "Audit Complete";
     traceBadge.classList.add("active");
 
@@ -194,7 +239,6 @@ async function handleAnalyzeSubmit(event) {
     btnText.innerText = "Audit & Verify Standards";
   }
 }
-
 function renderResults(result) {
   // Update stats bar
   const statsBar = document.getElementById("summary-stats-bar");
