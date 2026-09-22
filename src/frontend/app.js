@@ -1,10 +1,8 @@
 // Samagra — Evidence-First Procurement Decision Support System
 
-import * as pdfjsLib from "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
-import * as mammoth from "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+/* ============================================================
+   PRELOADED DEMONSTRATION SCENARIOS
+   ============================================================ */
 
 const PRELOADED_SCENARIOS = {
   protective_helmet: {
@@ -53,8 +51,18 @@ All structural concrete shall be ISI marked as per IS 456:2000. Mix design, cube
   }
 };
 
+
+/* ============================================================
+   APPLICATION STATE
+   ============================================================ */
+
 let currentInputMode = "tender";
 let selectedFile = null;
+
+
+/* ============================================================
+   INPUT MODE
+   ============================================================ */
 
 function switchInputMode(mode) {
   currentInputMode = mode;
@@ -96,9 +104,18 @@ function switchInputMode(mode) {
   }
 }
 
+
+/* ============================================================
+   DEMO SCENARIOS
+   ============================================================ */
+
 function loadSampleScenario(key) {
   const scenario = PRELOADED_SCENARIOS[key];
-  if (!scenario) return;
+
+  if (!scenario) {
+    console.warn(`Unknown demonstration scenario: ${key}`);
+    return;
+  }
 
   switchInputMode("tender");
 
@@ -121,9 +138,17 @@ function loadSampleScenario(key) {
     .forEach((p) => p.classList.remove("selected"));
 }
 
+
+/* ============================================================
+   FILE HANDLING
+   ============================================================ */
+
 async function handleFileSelect(event) {
   const file = event.target.files?.[0];
-  if (!file) return;
+
+  if (!file) {
+    return;
+  }
 
   selectedFile = file;
 
@@ -198,13 +223,35 @@ async function handleFileSelect(event) {
     selectedFile = null;
 
     const fileInput = document.getElementById("file-upload");
+
     if (fileInput) {
       fileInput.value = "";
     }
   }
 }
 
+
+/* ============================================================
+   PDF EXTRACTION
+   Lazy-loaded so a CDN failure does NOT kill the entire UI.
+   ============================================================ */
+
 async function extractTextFromPDF(file) {
+  let pdfjsLib;
+
+  try {
+    pdfjsLib = await import(
+      "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs"
+    );
+  } catch (err) {
+    throw new Error(
+      "PDF extraction library could not be loaded. Check your internet connection."
+    );
+  }
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+
   const arrayBuffer = await file.arrayBuffer();
 
   const loadingTask = pdfjsLib.getDocument({
@@ -215,7 +262,11 @@ async function extractTextFromPDF(file) {
 
   const pages = [];
 
-  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+  for (
+    let pageNumber = 1;
+    pageNumber <= pdf.numPages;
+    pageNumber++
+  ) {
     const page = await pdf.getPage(pageNumber);
     const content = await page.getTextContent();
 
@@ -233,7 +284,25 @@ async function extractTextFromPDF(file) {
   return pages.join("\n\n");
 }
 
+
+/* ============================================================
+   DOCX EXTRACTION
+   Lazy-loaded for the same reason as PDF extraction.
+   ============================================================ */
+
 async function extractTextFromDOCX(file) {
+  let mammoth;
+
+  try {
+    mammoth = await import(
+      "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"
+    );
+  } catch (err) {
+    throw new Error(
+      "DOCX extraction library could not be loaded. Check your internet connection."
+    );
+  }
+
   const arrayBuffer = await file.arrayBuffer();
 
   const result = await mammoth.extractRawText({
@@ -242,6 +311,11 @@ async function extractTextFromDOCX(file) {
 
   return result.value || "";
 }
+
+
+/* ============================================================
+   CLEAR INPUT
+   ============================================================ */
 
 function clearInput() {
   const inputText = document.getElementById("input-text");
@@ -285,6 +359,11 @@ function clearInput() {
   }
 }
 
+
+/* ============================================================
+   TRACE UI
+   ============================================================ */
+
 function resetTrace() {
   const badge = document.getElementById("trace-status-badge");
 
@@ -298,6 +377,7 @@ function resetTrace() {
   });
 }
 
+
 function updateTraceStep(stepIdx, statusClass, text) {
   const items = document.querySelectorAll(".trace-item");
 
@@ -309,6 +389,11 @@ function updateTraceStep(stepIdx, statusClass, text) {
     }
   }
 }
+
+
+/* ============================================================
+   ANALYSIS
+   ============================================================ */
 
 async function handleAnalyzeSubmit(event) {
   event.preventDefault();
@@ -440,6 +525,11 @@ async function handleAnalyzeSubmit(event) {
   }
 }
 
+
+/* ============================================================
+   HTML ESCAPING
+   ============================================================ */
+
 function escapeHtml(value) {
   if (value === null || value === undefined) {
     return "";
@@ -453,6 +543,11 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
+
+/* ============================================================
+   RESULT RENDERING
+   ============================================================ */
+
 function renderResults(result) {
   const statsBar = document.getElementById("summary-stats-bar");
 
@@ -460,23 +555,34 @@ function renderResults(result) {
     statsBar.classList.remove("hidden");
   }
 
-  document.getElementById("stat-total").innerText =
-    result.total_clauses ?? 0;
+  const totalEl = document.getElementById("stat-total");
+  const clearEl = document.getElementById("stat-clear");
+  const ambiguousEl = document.getElementById("stat-ambiguous");
+  const reviewEl = document.getElementById("stat-review");
 
-  document.getElementById("stat-clear").innerText =
-    result.clear_count ?? 0;
+  if (totalEl) {
+    totalEl.innerText = result.total_clauses ?? 0;
+  }
 
-  document.getElementById("stat-ambiguous").innerText =
-    result.ambiguous_count ?? 0;
+  if (clearEl) {
+    clearEl.innerText = result.clear_count ?? 0;
+  }
 
-  document.getElementById("stat-review").innerText =
-    result.human_review_count ?? 0;
+  if (ambiguousEl) {
+    ambiguousEl.innerText = result.ambiguous_count ?? 0;
+  }
+
+  if (reviewEl) {
+    reviewEl.innerText = result.human_review_count ?? 0;
+  }
 
   const container = document.getElementById(
     "results-cards-container"
   );
 
-  if (!container) return;
+  if (!container) {
+    return;
+  }
 
   container.innerHTML = "";
 
@@ -486,6 +592,7 @@ function renderResults(result) {
         <p>No valid requirement clauses extracted.</p>
       </div>
     `;
+
     return;
   }
 
@@ -825,7 +932,13 @@ function renderResults(result) {
   });
 }
 
-// Keep functions available to inline HTML handlers.
+
+/* ============================================================
+   INLINE HTML HANDLERS
+   Keep these because the existing HTML may use onclick /
+   onchange / onsubmit attributes.
+   ============================================================ */
+
 window.switchInputMode = switchInputMode;
 window.loadSampleScenario = loadSampleScenario;
 window.handleFileSelect = handleFileSelect;
