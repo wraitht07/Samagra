@@ -1,132 +1,307 @@
-import re
-from typing import List, Optional
+# verification.py
+import logging
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
-class ExtractedClause(BaseModel):
+from src.backend.config import settings
+from src.backend.extraction import ExtractedClause
+from src.backend.ingestion import ingestion_manager
+from src.backend.retrieval import RetrievalCandidate
+
+logger = logging.getLogger("sparkrit.verification")
+
+class StandardApplicabilityResult(BaseModel):
+    standard_id: str
+    title: str
+    applicability_status: str
+    applicability_reasons: List[str]
+    is_superseded: bool = False
+    superseded_by: Optional[str] = None
+    supersedes: Optional[str] = None
+    current_indexed_edition: Optional[str] = None
+    amendments_info: Optional[str] = None
+    amendment_history_notes: Optional[str] = None
+    certification_scheme: Optional[str] = None
+    is_mandatory: Optional[bool] = None
+    qco_order: Optional[str] = None
+    ministry: Optional[str] = None
+    effective_date: Optional[str] = None
+    related_standards: Dict[str, Any] = {
+        "normative_references": [],
+        "test_methods": [],
+        "safety_standards": [],
+        "superseded": [],
+        "allied_codes": [],
+    }
+    raw_metadata: Dict[str, Any] = {}
+
+class ClauseVerificationResult(BaseModel):
     clause_id: str
     section: Optional[str] = None
-    page: Optional[int] = None
-    title: Optional[str] = None
-    raw_text: str
-    cleaned_requirement: str
-    explicit_standards: List[str] = []
-    grades_or_parameters: List[str] = []
-    certification_demands: List[str] = []
-    keywords: List[str] = []
+    requirement_summary: str
+    recommended_standard: Optional[StandardApplicabilityResult] = None
+    alternative_candidates: List[StandardApplicabilityResult] = []
+    ambiguity_detected: bool = False
+    ambiguity_reason: Optional[str] = None
+    insufficient_evidence: bool = False
+    requires_human_review: bool = False
 
-class TenderExtractionResult(BaseModel):
-    document_title: str
-    summary: str
-    total_clauses: int
-    clauses: List[ExtractedClause]
+class VerificationEngine:
+    def __init__(self):
+        self.ingestion = ingestion_manager
 
-# Regex patterns for Indian Standards identification
-IS_PATTERN = re.compile(
-    r"\bIS\s*[:\s]?\s*([0-9]+(?:\s*\([^\)]+\))?(?:\s*:\s*[0-9]{4})?)",
-    re.IGNORECASE,
-)
-GRADE_PATTERN = re.compile(
-    r"\b(Fe\s*415[DS]?|Fe\s*500[DS]?|Fe\s*550[DS]?|Fe\s*600|E250|E350|Grade\s*43|Grade\s*53|OPC\s*43|OPC\s*53|PPC|PSC|M-?Sand|Recycled\s+aggregate|Lithium|Nickel)\b",
-    re.IGNORECASE,
-)
-CERT_PATTERN = re.compile(
-    r"\b(ISI\s*Mark|BIS\s*Standard\s*Mark|Scheme-I|Scheme\s*1|CRS|Compulsory\s*Registration\s*Scheme|R-?number|CM/L|Hallmark|Hallmarking|Test\s*Certificate|Lab\s*Report)\b",
-    re.IGNORECASE,
-)
+    def _get_relationships_for(self, standard_id: str) -> List[Dict[str, Any]]:
+        try:
+            return self.ingestion.get_relationships_for(standard_id)
+        except (AttributeError, TypeError):
+            logger.warning(f"No get_relationships_for method for {standard_id}")
+            return []
 
-def normalize_is_id(raw_is: str) -> str:
-    """Normalizes variations like 'IS: 456-2000' or 'IS 1786: 2008' to 'IS 456:2000'."""
-    clean = re.sub(r"^IS\s*[:\s]*", "IS ", raw_is.strip(), flags=re.IGNORECASE)
-    clean = re.sub(r"\s*:\s*", ":", clean)
-    clean = re.sub(r"\s*-\s*([0-9]{4})", r":\1", clean)
-    clean = re.sub(r"\s*\(part\s*([0-9]+)\)", r" (Part \1)", clean, flags=re.IGNORECASE)
-    return clean
+    def _get_regulations_for(self, standard_id: str) -> List[Dict[str, Any]]:
+        try:
+            return self.ingestion.get_regulations_for(standard_id)
+        except (AttributeError, TypeError):
+            logger.warning(f"No get_regulations_for method for {standard_id}")
+            return []
 
-def extract_specifications(text_content: str, filename: str = "tender_document.txt") -> TenderExtractionResult:
-    """
-    Parses tender text into structured requirement clauses with extracted references.
-    """
-    lines = [line.strip() for line in text_content.splitlines() if line.strip()]
+    def _get_standard(self, standard_id: str) -> Optional[Dict[str, Any]]:
+        try:
+            return self.ingestion.get_standard(standard_id)
+        except (AttributeError, TypeError):
+            logger.warning(f"No get_standard method for {standard_id}")
+            return None
 
-    # Extract document title
-    doc_title = "Procurement Specification Document"
-    for line in lines[:3]:
-        if "SAMPLE TENDER" in line.upper() or "NAME OF WORK:" in line.upper() or "ITEM:" in line.upper():
-            doc_title = line.replace("SAMPLE TENDER EXTRACT – ", "").strip()
-            break
+    def verify_candidate(
+        self,
+        candidate: RetrievalCandidate,
+        clause: ExtractedClause,
+    ) -> StandardApplicabilityResult:
+        std_id = candidate.standard_id
+        std_data = self._get_standard(std_id) or candidate.candidate_metadata
 
-    # Split text by clause markers
-    clause_splits = re.split(
-        r"(?=(?:BOQ\s+Clause|Clause|Section|\n\s*\d+\.\s+))",
-        text_content,
-        flags=re.IGNORECASE,
-    )
-
-    extracted_clauses: List[ExtractedClause] = []
-
-    # Fallback: Split by paragraphs if no clause markers found
-    if len(clause_splits) <= 1:
-        raw_paragraphs = [p.strip() for p in text_content.split("\n\n") if p.strip()]
-        if not raw_paragraphs:
-            raw_paragraphs = [text_content.strip()]
-        clause_splits = raw_paragraphs
-
-    for idx, raw_chunk in enumerate(clause_splits):
-        chunk = raw_chunk.strip()
-        if not chunk or len(chunk) < 10:
-            continue
-
-        # Extract section and title
-        section_name = None
-        title = None
-        first_line = chunk.splitlines()[0].strip()
-        if re.match(r"^(?:BOQ\s+Clause|Clause|Section|\d+\.)", first_line, re.IGNORECASE):
-            parts = first_line.split("–", 1) if "–" in first_line else first_line.split("-", 1)
-            section_name = parts[0].strip()
-            title = parts[1].strip() if len(parts) > 1 else section_name
-
-        # Extract IS numbers
-        found_is = []
-        for m in IS_PATTERN.finditer(chunk):
-            full_match = m.group(0)
-            norm = normalize_is_id(full_match)
-            if norm not in found_is:
-                found_is.append(norm)
-
-        # Extract grades/parameters
-        found_grades = list({m.group(0).strip() for m in GRADE_PATTERN.finditer(chunk)})
-
-        # Extract certification demands
-        found_certs = list({m.group(0).strip() for m in CERT_PATTERN.finditer(chunk)})
-
-        # Extract keywords
-        raw_words = re.findall(r"\b[A-Za-z]{4,}\b", chunk)
-        stop_words = {
-            "shall", "conform", "conforming", "submit", "submitted", "supplier",
-            "specification", "requirements", "tender", "sample", "extract",
-            "clause", "note", "evaluators",
-        }
-        keywords = [w.lower() for w in raw_words if w.lower() not in stop_words][:10]
-
-        extracted_clauses.append(
-            ExtractedClause(
-                clause_id=f"clause_{idx+1:02d}",
-                section=section_name or f"Section {idx+1}",
-                page=None,  # Removed arbitrary page assignment
-                title=title or f"Requirement {idx+1}",
-                raw_text=chunk,
-                cleaned_requirement=re.sub(r"\s+", " ", chunk),
-                explicit_standards=found_is,
-                grades_or_parameters=found_grades,
-                certification_demands=found_certs,
-                keywords=keywords,
+        if candidate.false_friend_detected or not std_data or std_data.get("standard_type") == "unknown":
+            return StandardApplicabilityResult(
+                standard_id=std_id,
+                title=candidate.title,
+                applicability_status="FALSE_FRIEND_REJECTED",
+                applicability_reasons=[
+                    f"Standard '{std_id}' does not exist in the BIS corpus.",
+                    "Rejecting non-existent standard reference.",
+                ],
+                certification_scheme=None,
+                related_standards={
+                    "normative_references": [],
+                    "test_methods": [],
+                    "safety_standards": [],
+                    "superseded": [],
+                    "allied_codes": [],
+                },
+                raw_metadata=std_data or {},
             )
+
+        title = std_data.get("title", candidate.title)
+        std_type = std_data.get("standard_type", "product_standard")
+
+        applicability_reasons: List[str] = []
+        status = "VERIFIED_APPLICABLE"
+
+        if std_type == "code_of_practice":
+            if any("ISI" in cert.upper() for cert in clause.certification_demands) or "ISI" in clause.raw_text.upper():
+                status = "CODE_OF_PRACTICE_WARNING"
+                applicability_reasons.append(
+                    f"WARNING: {std_id} is a Code of Practice, not a product standard. ISI Mark is invalid for CoP."
+                )
+            else:
+                applicability_reasons.append(f"Applicable as {std_type}.")
+
+        is_superseded = False
+        superseded_by = None
+        supersedes = None
+        current_indexed_edition = std_id
+
+        rels = self._get_relationships_for(std_id)
+        for r in rels:
+            if r.get("type") == "superseded_by" and r.get("from") == std_id:
+                is_superseded = True
+                superseded_by = r.get("to")
+                status = "SUPERSEDED"
+                applicability_reasons.append(f"Superseded by {superseded_by}.")
+            elif r.get("type") == "supersedes" and r.get("from") == std_id:
+                supersedes = r.get("to")
+                applicability_reasons.append(f"Supersedes {supersedes}.")
+
+        for explicit in clause.explicit_standards:
+            if explicit.startswith(std_id.split(":")[0]) and ":" in explicit:
+                cited_year = explicit.split(":")[-1]
+                indexed_year = str(std_data.get("publication_year", ""))
+                if cited_year != indexed_year:
+                    try:
+                        if int(cited_year or 0) < int(indexed_year or 9999):
+                            is_superseded = True
+                            applicability_reasons.append(
+                                f"Tender cites outdated year {cited_year}. Current: {std_id}."
+                            )
+                    except ValueError:
+                        logger.warning(f"Invalid year format: {cited_year} or {indexed_year}")
+
+        amendments_info = std_data.get("amendments")
+        amendment_history_notes = std_data.get("amendment_history")
+
+        cert_info = std_data.get("certification") or {}
+        cert_scheme = cert_info.get("type")
+        is_mandatory = cert_info.get("mandatory")
+        qco_order = cert_info.get("source")
+        ministry = None
+        effective_date = None
+
+        regs = self._get_regulations_for(std_id)
+        if regs:
+            reg = regs[0]
+            cert_scheme = reg.get("scheme", cert_scheme)
+            qco_order = reg.get("title", qco_order)
+            ministry = reg.get("ministry")
+            effective_date = reg.get("effective_from")
+            is_mandatory = True
+            applicability_reasons.append(
+                f"Mandatory under {qco_order} ({ministry}, Effective: {effective_date})."
+            )
+        elif cert_info.get("basis") == "not_uniformly_mandatory":
+            cert_scheme = None
+            is_mandatory = None
+            applicability_reasons.append("Certification: NOT DETERMINED.")
+
+        if cert_scheme:
+            if "CRS" in cert_scheme and (
+                any("ISI" in cert.upper() for cert in clause.certification_demands)
+                or "ISI" in clause.raw_text.upper()
+            ):
+                applicability_reasons.append(
+                    "Scheme mismatch: CRS requires R-number, not ISI Mark."
+                )
+
+            if "Hallmarking" in cert_scheme and any(
+                "ISI" in cert.upper() for cert in clause.certification_demands
+            ):
+                applicability_reasons.append(
+                    "Scheme mismatch: Hallmarking required, not ISI Mark."
+                )
+
+        related_stds: Dict[str, Any] = {
+            "normative_references": [],
+            "test_methods": [],
+            "safety_standards": [],
+            "superseded": [],
+            "allied_codes": [],
+        }
+
+        for r in rels:
+            target = r.get("to") if r.get("from") == std_id else r.get("from")
+            rtype = r.get("type", "allied_codes")
+            note = r.get("note", "")
+
+            entry = {"standard": target, "note": note, "type": rtype}
+            if rtype in ["normative_reference", "normative"]:
+                related_stds["normative_references"].append(entry)
+            elif rtype in ["test_method", "test"]:
+                related_stds["test_methods"].append(entry)
+            elif rtype in ["safety_standard", "safety"]:
+                related_stds["safety_standards"].append(entry)
+            elif rtype in ["supersedes", "superseded_by"]:
+                related_stds["superseded"].append(entry)
+            else:
+                related_stds["allied_codes"].append(entry)
+
+        return StandardApplicabilityResult(
+            standard_id=std_id,
+            title=title,
+            applicability_status=status,
+            applicability_reasons=applicability_reasons,
+            is_superseded=is_superseded,
+            superseded_by=superseded_by,
+            supersedes=supersedes,
+            current_indexed_edition=current_indexed_edition,
+            amendments_info=amendments_info,
+            amendment_history_notes=amendment_history_notes,
+            certification_scheme=cert_scheme,
+            is_mandatory=is_mandatory,
+            qco_order=qco_order,
+            ministry=ministry,
+            effective_date=effective_date,
+            related_standards=related_stds,
+            raw_metadata=std_data,
         )
 
-    return TenderExtractionResult(
-        document_title=doc_title,
-        summary=f"Extracted {len(extracted_clauses)} requirement clauses from {filename}.",
-        total_clauses=len(extracted_clauses),
-        clauses=extracted_clauses,
-    )
+    def verify_clause(
+        self,
+        clause: ExtractedClause,
+        candidates: List[RetrievalCandidate],
+    ) -> ClauseVerificationResult:
+        if not candidates:
+            return ClauseVerificationResult(
+                clause_id=clause.clause_id,
+                section=clause.section,
+                requirement_summary=clause.cleaned_requirement,
+                recommended_standard=None,
+                alternative_candidates=[],
+                ambiguity_detected=False,
+                insufficient_evidence=True,
+                requires_human_review=True,
+            )
+
+        verified_candidates = [self.verify_candidate(c, clause) for c in candidates]
+
+        top_cand = candidates[0]
+        if (
+            top_cand.false_friend_detected
+            or verified_candidates[0].applicability_status == "FALSE_FRIEND_REJECTED"
+        ):
+            return ClauseVerificationResult(
+                clause_id=clause.clause_id,
+                section=clause.section,
+                requirement_summary=clause.cleaned_requirement,
+                recommended_standard=verified_candidates[0],
+                alternative_candidates=verified_candidates[1:5],
+                ambiguity_detected=False,
+                insufficient_evidence=True,
+                requires_human_review=True,
+            )
+
+        ambiguity_detected = False
+        ambiguity_reason = None
+
+        if len(candidates) >= 2:
+            top_rrf = candidates[0].rrf_score
+            second_rrf = candidates[1].rrf_score
+            std1_id = candidates[0].standard_id
+            std2_id = candidates[1].standard_id
+
+            if "Part 1" in std1_id and "Part 2" in std2_id and std1_id.split("(")[0] == std2_id.split("(")[0]:
+                ambiguity_detected = True
+                ambiguity_reason = f"Sibling parts detected: {std1_id} vs {std2_id}."
+            elif abs(top_rrf - second_rrf) < settings.AMBIGUITY_SCORE_DELTA_THRESHOLD and top_cand.rrf_score < 0.25:
+                ambiguity_detected = True
+                ambiguity_reason = f"Close scores: {std1_id} vs {std2_id}."
+
+        insufficient_evidence = False
+        requires_human_review = False
+        if (
+            top_cand.rrf_score < settings.MIN_CONFIDENCE_THRESHOLD
+            and not top_cand.exact_match
+        ):
+            insufficient_evidence = True
+            requires_human_review = True
+
+        return ClauseVerificationResult(
+            clause_id=clause.clause_id,
+            section=clause.section,
+            requirement_summary=clause.cleaned_requirement,
+            recommended_standard=verified_candidates[0],
+            alternative_candidates=verified_candidates[1:5],
+            ambiguity_detected=ambiguity_detected,
+            ambiguity_reason=ambiguity_reason,
+            insufficient_evidence=insufficient_evidence,
+            requires_human_review=requires_human_review,
+        )
+
+verification_engine = VerificationEngine()

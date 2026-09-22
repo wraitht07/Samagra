@@ -1,7 +1,7 @@
 // Samagra — Evidence-First Procurement Decision Support System
+// Add these imports at the very top of app.js
 import { PDFDocument } from 'https://cdn.jsdelivr.net/npm/pdf-lib@^1.17.1/dist/pdf-lib.min.js';
 import * as mammoth from 'https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js';
-
 const PRELOADED_SCENARIOS = {
   protective_helmet: {
     title: "Protective Helmets (Clear Specification — Case 1)",
@@ -93,11 +93,13 @@ async function handleFileSelect(event) {
   document.getElementById("upload-label-text").innerText = `Processing: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
 
   try {
+    // Validate file type
     const validTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!validTypes.includes(file.type) && !file.name.match(/\.(txt|pdf|docx)$/i)) {
       throw new Error("Unsupported file type. Please upload .txt, .pdf, or .docx.");
     }
 
+    // Extract text based on file type
     let extractedText = "";
     if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
       extractedText = await file.text();
@@ -109,6 +111,7 @@ async function handleFileSelect(event) {
       extractedText = await extractTextFromDOCX(file);
     }
 
+    // Update the textarea with extracted text
     document.getElementById("input-text").value = extractedText;
     document.getElementById("upload-label-text").innerText = `Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
   } catch (err) {
@@ -169,7 +172,24 @@ function updateTraceStep(stepIdx, statusClass, text) {
     if (text) items[stepIdx].innerText = text;
   }
 }
-
+// Extract text from PDF (using pdf-lib)
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdfDoc = await PDFDocument.load(arrayBuffer);
+  let text = "";
+  for (let i = 0; i < pdfDoc.getPageCount(); i++) {
+    const page = pdfDoc.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(" ") + "\n";
+  }
+  return text;
+}
+// Extract text from DOCX (using mammoth)
+async function extractTextFromDOCX(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
 async function handleAnalyzeSubmit(event) {
   event.preventDefault();
   const text = document.getElementById("input-text").value.trim();
@@ -190,6 +210,7 @@ async function handleAnalyzeSubmit(event) {
   traceBadge.innerText = "Executing Statutory Audit Pipeline...";
   traceBadge.className = "trace-status";
 
+  // Visual trace progression
   updateTraceStep(0, "active", "1. Document & Clause Extraction ✓");
   updateTraceStep(1, "active", "2. Exact + BM25 + BGE-M3 Retrieval ✓");
   updateTraceStep(2, "active", "3. RRF Rank Fusion & Candidate Ranking ✓");
@@ -198,6 +219,7 @@ async function handleAnalyzeSubmit(event) {
   try {
     let response;
     if (selectedFile) {
+      // Send extracted text instead of raw file (backend expects text)
       const formData = new FormData();
       formData.append("text", document.getElementById("input-text").value);
       formData.append("document_title", selectedFile.name);
