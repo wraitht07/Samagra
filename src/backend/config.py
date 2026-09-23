@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Samagra - Evidence-First Indian Standards Engine"
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/samagra_db")
     EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-m3")
-    LLM_API_BASE: str = os.getenv("LLM_API_BASE", "http://localhost:11434/v1")
+    LLM_API_BASE: str = os.getenv("LLM_API_BASE", "http://localhost:11434")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen3.5:2b")
     RRF_K: int = 60
     TOP_K_RETRIEVAL: int = 15
