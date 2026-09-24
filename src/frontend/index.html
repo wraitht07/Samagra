@@ -3,11 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samagra — Indian Standards Procurement Recommendation Engine</title>
+  <title>Samagra — Indian Standards Procurement Decision-Support System</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Arial+Narrow:wght@400;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+  <script>
+    // UTC+5:30 Time for Officers
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.getElementById('current-time').textContent = `IST: ${timeString}`;
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+  </script>
 </head>
 <body>
   <!-- Header Bar -->
@@ -21,6 +37,7 @@
         </div>
       </div>
       <div class="system-status-badge">
+        <span id="current-time" class="time-display"></span>
         <span class="status-dot"></span>
         <span>Curated BIS Corpus Active (360 Standards)</span>
       </div>
@@ -96,11 +113,6 @@
           <div class="upload-dropzone" id="dropzone">
             <input type="file" id="file-upload" accept=".txt,.json,.doc,.docx,.pdf" onchange="handleFileSelect(event)" />
             <div class="dropzone-content">
-              <svg class="upload-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
               <span id="upload-label-text">Attach tender specification document (.txt, .pdf, .docx)</span>
             </div>
           </div>
@@ -195,4 +207,3 @@
   <script src="/static/app.js"></script>
 </body>
 </html>
-
