@@ -1,69 +1,185 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samagra — Indian Standards Procurement Decision-Support System</title>
+  <title>Samagra — Indian Standards Procurement Decision-Support Portal</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Arial+Narrow:wght@400;700&family=Times+New+Roman&display=swap" rel="stylesheet">
-  <script>
-    // UTC+5:30 Time for Officers
-    function updateTime() {
-      const now = new Date();
-      const timeString = now.toLocaleString('en-IN', {
-        timeZone: 'Asia/Kolkata',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-      document.getElementById('current-time').textContent = `IST: ${timeString}`;
-    }
-    setInterval(updateTime, 1000);
-    updateTime();
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
-  
-  <!-- Header Bar -->
+  <!-- Accessibility Skip Link -->
+  <a href="#main-content" class="skip-to-content">Skip to main content</a>
+
+  <!-- Top Global Bar -->
+  <div class="gov-topbar">
+    <div class="gov-topbar-content">
+      <div class="gov-topbar-left">
+        <span class="gov-flag-bar"></span>
+        <span class="gov-label">GOVERNMENT OF INDIA • PROCUREMENT DECISION SUPPORT PORTAL</span>
+      </div>
+      <div class="gov-topbar-right">
+        <span id="current-time" class="time-display"></span>
+        <span class="system-status"><span class="status-indicator"></span> 360 Standards Active</span>
+        <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark mode" onclick="toggleTheme()">
+          <span class="theme-icon" id="theme-icon">🌙</span>
+          <span class="theme-label" id="theme-text">Dark Mode</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Primary Sticky Header -->
   <header class="app-header">
     <div class="header-content">
       <div class="brand-group">
-        <div class="emblem-badge">IS</div>
-        <div>
+        <div class="brand-emblem">
+          <span class="emblem-text">IS</span>
+        </div>
+        <div class="brand-text">
           <h1 class="brand-title">Samagra</h1>
-          <p class="brand-subtitle">AI-Powered Indian Standards (BIS) Procurement Decision-Support System</p>
+          <p class="brand-tagline">Indian Standards (BIS) Evidence-Backed Decision Support System</p>
         </div>
       </div>
-      <div class="system-status-badge">
-        <span id="current-time" class="time-display"></span>
-        <span class="status-dot"></span>
-        <span>Curated BIS Corpus Active (360 Standards)</span>
-      </div>
+      <nav class="main-nav" aria-label="Main Navigation">
+        <ul class="nav-list">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#standards" class="nav-link" onclick="switchInputMode('query'); document.getElementById('input-text').focus();">Standards</a></li>
+          <li><a href="#tender-analysis" class="nav-link" onclick="switchInputMode('tender'); document.getElementById('input-text').focus();">Tender Analysis</a></li>
+          <li><a href="#audit-evidence" class="nav-link" onclick="document.getElementById('trace-card').scrollIntoView({behavior:'smooth'});">Audit/Evidence</a></li>
+          <li><a href="#features" class="nav-link">Modules</a></li>
+          <li><a href="#help" class="nav-link">Help</a></li>
+        </ul>
+      </nav>
     </div>
   </header>
 
-  <main class="main-container">
-    <!-- Top Architecture & Workflow Banner -->
-    <section class="architecture-banner">
-      <div class="arch-flow">
-        <div class="arch-step"><span class="step-num">1</span> Extraction</div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-step"><span class="step-num">2</span> Hybrid Retrieval (BM25 + BGE-M3)</div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-step"><span class="step-num">3</span> RRF Reranking</div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-step"><span class="step-num">4</span> Statutory Verification</div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-step"><span class="step-num">5</span> Grounded Reasoning</div>
-        <div class="arch-arrow">→</div>
-        <div class="arch-step"><span class="step-num">6</span> Evidence Trail</div>
+  <!-- Hero Section -->
+  <section class="hero-section" id="home">
+    <div class="hero-container">
+      <div class="hero-badge">Enterprise &amp; Public Procurement Intelligence</div>
+      <h2 class="hero-headline">Evidence-Backed Indian Standards for Procurement</h2>
+      <p class="hero-subtext">
+        Extracts requirements from tender documents &amp; BOQs, identifies applicable BIS standards, verifies statutory QCO compliance, and generates an audit-ready reasoning trail.
+      </p>
+      <div class="hero-actions">
+        <a href="#tender-analysis" class="btn btn-hero-primary" onclick="switchInputMode('tender'); document.getElementById('input-text').focus();">Analyze Tender</a>
+        <a href="#tender-analysis" class="btn btn-hero-secondary" onclick="switchInputMode('query'); document.getElementById('input-text').focus();">Explore Standards</a>
       </div>
-    </section>
+      <div class="trust-row">
+        <span class="trust-item"><span class="trust-check">✓</span> Evidence-First Verification</span>
+        <span class="trust-sep">•</span>
+        <span class="trust-item"><span class="trust-check">✓</span> Verified Statutory Applicability</span>
+        <span class="trust-sep">•</span>
+        <span class="trust-item"><span class="trust-check">✓</span> Audit-Ready Compliance Trail</span>
+      </div>
+    </div>
+  </section>
 
-    <!-- Main Workspace Layout -->
+  <!-- Workflow Pipeline Visualization -->
+  <section class="workflow-section">
+    <div class="workflow-container">
+      <div class="workflow-title-row">
+        <span class="section-kicker">VERIFICATION PIPELINE</span>
+        <h3 class="section-title">End-to-End Decision Architecture</h3>
+      </div>
+      <div class="workflow-steps">
+        <div class="workflow-step">
+          <div class="step-badge">01</div>
+          <div class="step-info">
+            <span class="step-name">Extract</span>
+            <span class="step-desc">Clause &amp; BOQ Parsing</span>
+          </div>
+        </div>
+        <div class="workflow-connector">→</div>
+        <div class="workflow-step">
+          <div class="step-badge">02</div>
+          <div class="step-info">
+            <span class="step-name">Retrieve</span>
+            <span class="step-desc">Hybrid BM25 + BGE-M3</span>
+          </div>
+        </div>
+        <div class="workflow-connector">→</div>
+        <div class="workflow-step">
+          <div class="step-badge">03</div>
+          <div class="step-info">
+            <span class="step-name">Verify</span>
+            <span class="step-desc">Lifecycle, Edition &amp; QCO</span>
+          </div>
+        </div>
+        <div class="workflow-connector">→</div>
+        <div class="workflow-step">
+          <div class="step-badge">04</div>
+          <div class="step-info">
+            <span class="step-name">Reason</span>
+            <span class="step-desc">Deterministic / Local LLM</span>
+          </div>
+        </div>
+        <div class="workflow-connector">→</div>
+        <div class="workflow-step">
+          <div class="step-badge">05</div>
+          <div class="step-info">
+            <span class="step-name">Evidence</span>
+            <span class="step-desc">Audit Trail Dossier</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Feature Cards Section -->
+  <section class="features-section" id="features">
+    <div class="features-container">
+      <div class="feature-card" onclick="switchInputMode('tender'); document.getElementById('tender-analysis').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">📄</div>
+        <h4>Analyze Tender</h4>
+        <p>Upload or paste multi-clause tender documents, BOQs, or civil works schedules for automated standards verification.</p>
+        <span class="feature-link">Open Workspace &rarr;</span>
+      </div>
+      <div class="feature-card" onclick="switchInputMode('query'); document.getElementById('tender-analysis').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">🔍</div>
+        <h4>Find Standards</h4>
+        <p>Query the curated BIS repository with natural language to discover official Indian Standards and gazette notifications.</p>
+        <span class="feature-link">Search Repository &rarr;</span>
+      </div>
+      <div class="feature-card" onclick="document.getElementById('trace-card').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">🛡️</div>
+        <h4>Evidence &amp; Audit Trail</h4>
+        <p>Inspect verbatim requirement citations, edition validity, revision history, and rationale for every recommendation.</p>
+        <span class="feature-link">View Trace Pipeline &rarr;</span>
+      </div>
+      <div class="feature-card" onclick="document.getElementById('tender-analysis').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">🔗</div>
+        <h4>Related Standards</h4>
+        <p>Cross-reference allied test methods, mandatory safety guidelines, and normative references linked to primary IS codes.</p>
+        <span class="feature-link">Inspect Relations &rarr;</span>
+      </div>
+      <div class="feature-card" onclick="document.getElementById('tender-analysis').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">⚖️</div>
+        <h4>Certification Check</h4>
+        <p>Validate statutory Quality Control Orders (QCOs), Ministry notifications, ISI Scheme-I marks, and CRS R-numbers.</p>
+        <span class="feature-link">Check Schemes &rarr;</span>
+      </div>
+      <div class="feature-card" onclick="loadSampleScenario('protective_helmet'); document.getElementById('tender-analysis').scrollIntoView({behavior:'smooth'});">
+        <div class="feature-icon">🧪</div>
+        <h4>Evaluation Test Cases</h4>
+        <p>Execute pre-configured baseline tests for clear specs, semantic ambiguities, superseded traps, and civil structures.</p>
+        <span class="feature-link">Run Demonstrations &rarr;</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Interactive Workspace -->
+  <main class="main-container" id="main-content">
+    <div class="workspace-section-header" id="tender-analysis">
+      <div>
+        <h3 class="workspace-title">Procurement Decision-Support Workspace</h3>
+        <p class="workspace-subtitle">Input tender specifications or clauses to run statutory verification and generate evidence dossier.</p>
+      </div>
+    </div>
+
     <div class="workspace-grid">
       <!-- Left Panel: Input & Controls -->
       <aside class="control-panel">
@@ -73,31 +189,31 @@
         </div>
 
         <!-- Mode Tabs -->
-        <div class="tab-group">
-          <button class="tab-btn active" id="tab-tender-btn" onclick="switchInputMode('tender')">Tender Document / BOQ</button>
-          <button class="tab-btn" id="tab-query-btn" onclick="switchInputMode('query')">Natural Language Query</button>
+        <div class="tab-group" role="tablist">
+          <button class="tab-btn active" id="tab-tender-btn" role="tab" aria-selected="true" onclick="switchInputMode('tender')">Tender Document / BOQ</button>
+          <button class="tab-btn" id="tab-query-btn" role="tab" aria-selected="false" onclick="switchInputMode('query')">Natural Language Query</button>
         </div>
 
-        <!-- Preloaded Demo Cases -->
+        <!-- Quick Access Demonstration Scenarios -->
         <div class="demo-selector-group">
-          <label class="section-label">Select Demonstration Scenario:</label>
+          <label class="section-label">Quick Access Demonstration Scenarios:</label>
           <div class="demo-buttons">
-            <button class="demo-pill demo-clear" onclick="loadSampleScenario('protective_helmet')">
+            <button type="button" class="demo-pill demo-clear" onclick="loadSampleScenario('protective_helmet')">
               <span class="pill-badge">CASE 1</span> Clear Specification (AI NOT INVOKED)
             </button>
-            <button class="demo-pill demo-ambiguous" onclick="loadSampleScenario('power_bank')">
+            <button type="button" class="demo-pill demo-ambiguous" onclick="loadSampleScenario('power_bank')">
               <span class="pill-badge">CASE 2</span> Semantic Ambiguity (LOCAL LLM)
             </button>
-            <button class="demo-pill demo-trap" onclick="loadSampleScenario('industrial_valves')">
+            <button type="button" class="demo-pill demo-trap" onclick="loadSampleScenario('industrial_valves')">
               <span class="pill-badge">CASE 3</span> False-Friend / Defect (HUMAN REVIEW)
             </button>
-            <button class="demo-pill demo-concrete" onclick="loadSampleScenario('concrete_aggregate')">
+            <button type="button" class="demo-pill demo-concrete" onclick="loadSampleScenario('concrete_aggregate')">
               <span class="pill-badge">AUDIT</span> Multi-Clause Civil Tender (IS 456 / Fe500)
             </button>
           </div>
         </div>
 
-        <!-- Input Area -->
+        <!-- Input Area Form -->
         <form id="recommend-form" onsubmit="handleAnalyzeSubmit(event)">
           <div class="form-group">
             <label for="input-text" id="input-label" class="section-label">Tender Specification Text / Clause:</label>
@@ -114,14 +230,15 @@
           <div class="upload-dropzone" id="dropzone">
             <input type="file" id="file-upload" accept=".txt,.json,.doc,.docx,.pdf" onchange="handleFileSelect(event)" />
             <div class="dropzone-content">
+              <span class="dropzone-icon">📎</span>
               <span id="upload-label-text">Attach tender specification document (.txt, .pdf, .docx)</span>
             </div>
           </div>
 
           <div class="action-row">
-            <button type="button" class="btn-secondary" onclick="clearInput()">Clear</button>
-            <button type="submit" class="btn-primary" id="analyze-btn">
-              <span class="btn-text">Audit & Verify Standards</span>
+            <button type="button" class="btn btn-secondary" onclick="clearInput()">Clear</button>
+            <button type="submit" class="btn btn-primary" id="analyze-btn">
+              <span class="btn-text">Audit &amp; Verify Standards</span>
               <div class="spinner hidden" id="loading-spinner"></div>
             </button>
           </div>
@@ -133,10 +250,10 @@
             <summary class="drawer-title">Common Procurement Traps Monitored</summary>
             <ul class="traps-list">
               <li><strong>IS 456:2000</strong> — Demanding ISI mark on Code of Practice.</li>
-              <li><strong>IS 1786:2008 vs 1985</strong> — Superseded edition & Fe500 vs Fe500D ductility.</li>
+              <li><strong>IS 1786:2008 vs 1985</strong> — Superseded edition &amp; Fe500 vs Fe500D ductility.</li>
               <li><strong>IS 13252 vs ISI</strong> — Demanding ISI Mark instead of CRS R-number.</li>
               <li><strong>IS 16046</strong> — Part 1 (Nickel) vs Part 2 (Lithium) chemistry mix-up.</li>
-              <li><strong>IS 4151:2015</strong> — Omission of mandatory Amendments 1 & 2.</li>
+              <li><strong>IS 4151:2015</strong> — Omission of mandatory Amendments 1 &amp; 2.</li>
               <li><strong>IS 1417</strong> — Confusing Hallmarking with Scheme-I Factory Mark.</li>
             </ul>
           </details>
@@ -144,7 +261,7 @@
       </aside>
 
       <!-- Right Panel: Evidence & Trace Workspace -->
-      <section class="results-workspace">
+      <section class="results-workspace" id="audit-evidence">
         <!-- Live Recommendation Trace Banner -->
         <div class="trace-card" id="trace-card">
           <div class="trace-header">
@@ -153,10 +270,10 @@
           </div>
           <div class="trace-milestones" id="trace-milestones-container">
             <div class="trace-item idle">1. Document / Query Extraction</div>
-            <div class="trace-item idle">2. Exact & Hybrid Retrieval (BM25 + BGE-M3)</div>
-            <div class="trace-item idle">3. Reciprocal Rank Fusion & Reranking</div>
-            <div class="trace-item idle">4. Statutory Lifecycle & Trap Verification</div>
-            <div class="trace-item idle">5. Regulatory & Mandatory QCO Check</div>
+            <div class="trace-item idle">2. Exact &amp; Hybrid Retrieval (BM25 + BGE-M3)</div>
+            <div class="trace-item idle">3. Reciprocal Rank Fusion &amp; Reranking</div>
+            <div class="trace-item idle">4. Statutory Lifecycle &amp; Trap Verification</div>
+            <div class="trace-item idle">5. Regulatory &amp; Mandatory QCO Check</div>
             <div class="trace-item idle">6. Evidence Dossier Synthesis</div>
           </div>
         </div>
@@ -198,13 +315,101 @@
     </div>
   </main>
 
-  <footer class="app-footer">
-    <div class="footer-content">
-      <span>SIH 26108 — AI-Powered Indian Standards Recommendation Engine</span>
-      <span>Curated Evaluation Corpus • Offline-First Architecture</span>
+  <!-- Comprehensive Footer -->
+  <footer class="app-footer" id="help">
+    <div class="footer-top">
+      <div class="footer-grid">
+        <div class="footer-col brand-col">
+          <div class="footer-brand-title">Samagra Decision-Support Portal</div>
+          <p class="footer-brand-desc">
+            An evidence-first, deterministic-first AI decision-support architecture for Indian Standards (BIS) statutory verification in government and enterprise procurement.
+          </p>
+          <div class="footer-badge">SIH 26108 • Offline-First Architecture</div>
+        </div>
+        <div class="footer-col">
+          <h4>Navigation</h4>
+          <ul class="footer-links">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#features">Feature Modules</a></li>
+            <li><a href="#tender-analysis">Tender Analysis</a></li>
+            <li><a href="#audit-evidence">Audit Trail &amp; Evidence</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Standards &amp; Schemes</h4>
+          <ul class="footer-links">
+            <li><a href="#tender-analysis" onclick="loadSampleScenario('protective_helmet')">ISI Scheme-I Products</a></li>
+            <li><a href="#tender-analysis" onclick="loadSampleScenario('power_bank')">CRS Scheme-II Electronics</a></li>
+            <li><a href="#tender-analysis" onclick="loadSampleScenario('concrete_aggregate')">Civil Engineering Standards</a></li>
+            <li><a href="#tender-analysis">Statutory QCO Orders</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support &amp; Compliance</h4>
+          <ul class="footer-links">
+            <li><a href="#help">User Guide &amp; FAQ</a></li>
+            <li><a href="#help">Procurement Traps Index</a></li>
+            <li><a href="#help">Terms of Use</a></li>
+            <li><a href="#help">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-bottom-content">
+        <span>&copy; 2026 Samagra — National Procurement Decision-Support Portal (GIGW 3.0 Inspired).</span>
+        <span>Curated BIS Standards Corpus • Verifiable Statutory Evidence</span>
+      </div>
     </div>
   </footer>
 
+  <script>
+    // Theme Management with Persistence
+    function initTheme() {
+      const savedTheme = localStorage.getItem('samagra_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeButton(savedTheme);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('samagra_theme', newTheme);
+      updateThemeButton(newTheme);
+    }
+
+    function updateThemeButton(theme) {
+      const icon = document.getElementById('theme-icon');
+      const text = document.getElementById('theme-text');
+      if (icon && text) {
+        if (theme === 'dark') {
+          icon.textContent = '☀️';
+          text.textContent = 'Light Mode';
+        } else {
+          icon.textContent = '🌙';
+          text.textContent = 'Dark Mode';
+        }
+      }
+    }
+
+    initTheme();
+
+    // UTC+5:30 Time for Officers
+    function updateTime() {
+      const now = new Date();
+      const timeString = now.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      document.getElementById('current-time').textContent = `IST: ${timeString}`;
+    }
+    setInterval(updateTime, 1000);
+    updateTime();
+  </script>
   <script src="/static/app.js"></script>
 </body>
 </html>
