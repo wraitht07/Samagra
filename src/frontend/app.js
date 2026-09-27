@@ -60,256 +60,171 @@ let currentInputMode = "tender";
 let selectedFile = null;
 
 
-/* ============================================================
-   INPUT MODE
-   ============================================================ */
-
-function switchInputMode(mode) {
-  currentInputMode = mode;
-
-  const tenderBtn = document.getElementById("tab-tender-btn");
-  const queryBtn = document.getElementById("tab-query-btn");
-  const inputLabel = document.getElementById("input-label");
-  const inputText = document.getElementById("input-text");
-  const dropzone = document.getElementById("dropzone");
-
-  if (mode === "tender") {
-    tenderBtn?.classList.add("active");
-    queryBtn?.classList.remove("active");
-
-    if (inputLabel) {
-      inputLabel.innerText = "Tender Specification Text / BOQ Clauses:";
-    }
-
-    if (inputText) {
-      inputText.placeholder =
-        "Paste multi-clause tender documents, BOQ specifications, or extract clauses...";
-    }
-
-    dropzone?.classList.remove("hidden");
-  } else {
-    queryBtn?.classList.add("active");
-    tenderBtn?.classList.remove("active");
-
-    if (inputLabel) {
-      inputLabel.innerText = "Natural Language Procurement Query:";
-    }
-
-    if (inputText) {
-      inputText.placeholder =
-        "E.g.: Which Indian standard is mandatory for lithium-ion power bank cells under CRS?";
-    }
-
-    dropzone?.classList.add("hidden");
-  }
-}
-
-
-/* ============================================================
-   DEMO SCENARIOS
-   ============================================================ */
-
-function loadSampleScenario(key) {
-  const scenario = PRELOADED_SCENARIOS[key];
-
-  if (!scenario) {
-    console.warn(`Unknown demonstration scenario: ${key}`);
-    return;
-  }
-
-  switchInputMode("tender");
-
-  const inputText = document.getElementById("input-text");
-  const uploadLabel = document.getElementById("upload-label-text");
-
-  if (inputText) {
-    inputText.value = scenario.text;
-  }
-
-  selectedFile = null;
-
-  if (uploadLabel) {
-    uploadLabel.innerText =
-      "Attach tender specification document (.txt, .pdf, .docx)";
-  }
-
-  document
-    .querySelectorAll(".demo-pill")
-    .forEach((p) => p.classList.remove("selected"));
-}
-
-
-/* ============================================================
-   FILE HANDLING
-   ============================================================ */
+// ==========================================================
+// FILE HANDLING (Lines 62–150)
+// ==========================================================
 
 async function handleFileSelect(event) {
   const file = event.target.files?.[0];
-
-  if (!file) {
-    return;
-  }
+  if (!file) return;
 
   selectedFile = file;
-
   const uploadLabel = document.getElementById("upload-label-text");
-
   if (uploadLabel) {
-    uploadLabel.innerText =
-      `Processing: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    uploadLabel.innerText = `Processing: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
   }
 
   try {
+    // Validate file type
     const validTypes = [
       "text/plain",
       "application/pdf",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     ];
-
     const validExtension = /\.(txt|pdf|docx)$/i.test(file.name);
 
     if (!validTypes.includes(file.type) && !validExtension) {
-      throw new Error(
-        "Unsupported file type. Please upload .txt, .pdf, or .docx."
-      );
+      throw new Error("Unsupported file type. Please upload .txt, .pdf, or .docx.");
     }
 
+    // Extract text based on file type
     let extractedText = "";
-
-    if (
-      file.type === "text/plain" ||
-      /\.txt$/i.test(file.name)
-    ) {
+    if (file.type === "text/plain" || /\.txt$/i.test(file.name)) {
       extractedText = await file.text();
-    } else if (
-      file.type === "application/pdf" ||
-      /\.pdf$/i.test(file.name)
-    ) {
+    } else if (file.type === "application/pdf" || /\.pdf$/i.test(file.name)) {
       extractedText = await extractTextFromPDF(file);
-    } else if (
-      file.type ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      /\.docx$/i.test(file.name)
-    ) {
+    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" || /\.docx$/i.test(file.name)) {
       extractedText = await extractTextFromDOCX(file);
     }
 
     if (!extractedText.trim()) {
-      throw new Error(
-        "No extractable text was found in the document."
-      );
+      throw new Error("No extractable text found in the document.");
     }
 
+    // Populate input field and update UI
     const inputText = document.getElementById("input-text");
-
     if (inputText) {
       inputText.value = extractedText;
     }
-
     if (uploadLabel) {
-      uploadLabel.innerText =
-        `Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      uploadLabel.innerText = `Attached: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
     }
+
+    // Auto-trigger analysis (optional)
+    // handleAnalyzeSubmit(new Event("submit"));
   } catch (err) {
     console.error("File extraction error:", err);
-
     alert(`Error processing file: ${err.message}`);
-
     if (uploadLabel) {
-      uploadLabel.innerText =
-        "Attach tender specification document (.txt, .pdf, .docx)";
+      uploadLabel.innerText = "Attach tender specification document (.txt, .pdf, .docx)";
     }
-
     selectedFile = null;
-
     const fileInput = document.getElementById("file-upload");
-
-    if (fileInput) {
-      fileInput.value = "";
-    }
+    if (fileInput) fileInput.value = "";
   }
 }
 
+// ==========================================================
+// STANDARD MAPPING (Lines 151–250)
+// ==========================================================
 
-/* ============================================================
-   PDF EXTRACTION
-   Lazy-loaded so a CDN failure does NOT kill the entire UI.
-   ============================================================ */
-
-async function extractTextFromPDF(file) {
-  let pdfjsLib;
-
+// Load standards.json (preload or fetch dynamically)
+let standardsData = [];
+async function loadStandards() {
+  if (standardsData.length > 0) return standardsData;
   try {
-    pdfjsLib = await import(
-      "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs"
-    );
+    const response = await fetch("/data/standards.json");
+    if (!response.ok) throw new Error("Failed to load standards data.");
+    standardsData = await response.json();
+    return standardsData;
   } catch (err) {
-    throw new Error(
-      "PDF extraction library could not be loaded. Check your internet connection."
-    );
+    console.error("Error loading standards:", err);
+    return [];
   }
-
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
-
-  const arrayBuffer = await file.arrayBuffer();
-
-  const loadingTask = pdfjsLib.getDocument({
-    data: new Uint8Array(arrayBuffer)
-  });
-
-  const pdf = await loadingTask.promise;
-
-  const pages = [];
-
-  for (
-    let pageNumber = 1;
-    pageNumber <= pdf.numPages;
-    pageNumber++
-  ) {
-    const page = await pdf.getPage(pageNumber);
-    const content = await page.getTextContent();
-
-    const pageText = content.items
-      .map((item) => item.str || "")
-      .join(" ")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    if (pageText) {
-      pages.push(`[Page ${pageNumber}]\n${pageText}`);
-    }
-  }
-
-  return pages.join("\n\n");
 }
 
+// Map extracted text to standards
+async function mapToStandards(text) {
+  await loadStandards();
+  const keywords = text.toLowerCase().split(/\s+/);
+  const matchedStandards = [];
+  let requiresReview = true;
 
-/* ============================================================
-   DOCX EXTRACTION
-   Lazy-loaded for the same reason as PDF extraction.
-   ============================================================ */
+  // Check for exact matches (e.g., "IS 4151:2015")
+  const exactMatches = standardsData.filter(std =>
+    keywords.some(keyword => std.standard_id.toLowerCase().includes(keyword))
+  );
 
-async function extractTextFromDOCX(file) {
-  let mammoth;
+  // Check for fuzzy matches (e.g., "protective helmet" → IS 4151)
+  const fuzzyMatches = standardsData.filter(std =>
+    std.keywords.some(keyword =>
+      text.toLowerCase().includes(keyword.toLowerCase())
+    )
+  );
 
-  try {
-    mammoth = await import(
-      "https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"
-    );
-  } catch (err) {
-    throw new Error(
-      "DOCX extraction library could not be loaded. Check your internet connection."
-    );
+  // Combine and deduplicate
+  matchedStandards.push(...exactMatches, ...fuzzyMatches);
+  matchedStandards = [...new Set(matchedStandards)];
+
+  if (matchedStandards.length > 0) {
+    requiresReview = false;
   }
 
-  const arrayBuffer = await file.arrayBuffer();
+  return { matchedStandards, requiresReview };
+}
 
-  const result = await mammoth.extractRawText({
-    arrayBuffer
+// ==========================================================
+// RESULT RENDERING (Lines 251–313)
+// ==========================================================
+
+async function renderResults(result) {
+  const container = document.getElementById("results-cards-container");
+  if (!container) return;
+
+  container.innerHTML = "";
+  if (!result.matchedStandards || result.matchedStandards.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <h3>⚠️ Human Review Required</h3>
+        <p>No matching standards found in the dataset. Please review manually.</p>
+      </div>
+    `;
+    return;
+  }
+
+  result.matchedStandards.forEach((standard) => {
+    const cardEl = document.createElement("div");
+    cardEl.className = "audit-card";
+
+    const status = standard.verified ? "VERIFIED APPLICABLE" : "HUMAN REVIEW REQUIRED";
+    const badgeClass = standard.verified ? "badge-verified" : "badge-danger";
+
+    cardEl.innerHTML = `
+      <div class="card-top-bar">
+        <div class="card-title-group">
+          <h4>${escapeHtml(standard.standard_id)}</h4>
+          <div class="card-subtitle">${escapeHtml(standard.title)}</div>
+        </div>
+        <div style="text-align:right;">
+          <span class="status-badge ${badgeClass}">${status}</span>
+        </div>
+      </div>
+      <div class="citation-box">
+        <div class="citation-meta">Standard Scope:</div>
+        <div class="citation-quote">${escapeHtml(standard.scope)}</div>
+      </div>
+      <div class="evidence-grid">
+        <div class="evidence-subpanel">
+          <div class="subpanel-header">Certification</div>
+          <ul class="check-list">
+            <li><strong>Type:</strong> ${escapeHtml(standard.certification?.type || "N/A")}</li>
+            <li><strong>Mandatory:</strong> ${standard.certification?.mandatory ? "YES" : "NO"}</li>
+          </ul>
+        </div>
+      </div>
+    `;
+    container.appendChild(cardEl);
   });
-
-  return result.value || "";
 }
 
 
